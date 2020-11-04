@@ -6,7 +6,12 @@ namespace Artemeon\Composer\Plugin;
 
 use Artemeon\Composer\Module\ModulePackageLoader;
 use Composer\Composer;
+use Composer\DependencyResolver\Operation\InstallOperation;
 use Composer\EventDispatcher\EventSubscriberInterface;
+use Composer\Factory;
+use Composer\Installer;
+use Composer\Installer\PackageEvent;
+use Composer\Installer\PackageEvents;
 use Composer\IO\IOInterface;
 use Composer\Package\RootPackageInterface;
 use Composer\Plugin\PluginInterface;
@@ -21,6 +26,8 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     private Composer $composer;
     private IOInterface $io;
     private ModulePackageLoader $modulePackageLoader;
+
+    protected bool $isFirstInstall = false;
 
     public function activate(Composer $composer, IOInterface $io): void
     {
@@ -42,7 +49,10 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         return [
             ScriptEvents::PRE_INSTALL_CMD => ['preInstallOrUpdate', static::CALLBACK_PRIORITY],
             ScriptEvents::PRE_UPDATE_CMD => ['preInstallOrUpdate', static::CALLBACK_PRIORITY],
+            ScriptEvents::POST_INSTALL_CMD => ['postInstallOrUpdate', static::CALLBACK_PRIORITY],
+            ScriptEvents::POST_UPDATE_CMD => ['postInstallOrUpdate', static::CALLBACK_PRIORITY],
             ScriptEvents::PRE_AUTOLOAD_DUMP => ['preAutoloadDump', static::CALLBACK_PRIORITY],
+            PackageEvents::POST_PACKAGE_INSTALL => ['postPackageInstall', static::CALLBACK_PRIORITY],
         ];
     }
 
@@ -50,10 +60,26 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     {
         $this->mergeRequires($this->composer->getPackage());
     }
+
+    public function postInstallOrUpdate(ScriptEvent $event): void
+    {
+        if (!$this->isFirstInstall) {
+            return;
+        }
+
+        $this->isFirstInstall = false;
+        $this->runAdditionalUpdateToApplyMergedConfiguration($event);
+    }
+
     public function preAutoloadDump(ScriptEvent $event): void
     {
         $rootPackage = $this->composer->getPackage();
         $this->mergeAutoloads($rootPackage);
+    }
+
+    public function postPackageInstall(PackageEvent $event): void
+    {
+        $this->recognizePluginInstallation($event);
     }
 
     private function mergeAutoloads(RootPackageInterface $rootPackage): void
@@ -67,6 +93,38 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     {
         foreach ($this->modulePackageLoader->load(self::MODULES_BASE_PATH) as $modulePackage) {
             $modulePackage->mergeRequires($rootPackage);
+        }
+    }
+
+    private function runAdditionalUpdateToApplyMergedConfiguration(ScriptEvent $event): void
+    {
+        $this->io->info('<comment>Running additional update to apply merged configuration</comment>');
+
+        $config = $this->composer->getConfig();
+        $preferSource = $config->get('preferred-install') === 'source';
+        $preferDist = $config->get('preferred-install') === 'dist';
+
+        $installer = Installer::create($this->io, Factory::create($this->io));
+        $installer->setPreferSource($preferSource);
+        $installer->setPreferDist($preferDist);
+        $installer->setDevMode($event->isDevMode());
+        $installer->setDumpAutoloader(true);
+        $installer->setOptimizeAutoloader(false);
+        $installer->setUpdate(true);
+        $installer->run();
+    }
+
+    private function recognizePluginInstallation(PackageEvent $event): void
+    {
+        $operation = $event->getOperation();
+        if (!($operation instanceof InstallOperation)) {
+            return;
+        }
+
+        $package = $operation->getPackage()->getName();
+        if ($package === 'artemeon/composer-merge-plugin') {
+            $this->io->info("{$package} installed");
+            $this->isFirstInstall = true;
         }
     }
 }
