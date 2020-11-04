@@ -40,8 +40,15 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
+            ScriptEvents::PRE_INSTALL_CMD => ['preInstallOrUpdate', static::CALLBACK_PRIORITY],
+            ScriptEvents::PRE_UPDATE_CMD => ['preInstallOrUpdate', static::CALLBACK_PRIORITY],
             ScriptEvents::PRE_AUTOLOAD_DUMP => ['preAutoloadDump', static::CALLBACK_PRIORITY],
         ];
+    }
+
+    public function preInstallOrUpdate(ScriptEvent $event): void
+    {
+        $this->mergeRequires($this->composer->getPackage());
     }
     public function preAutoloadDump(ScriptEvent $event): void
     {
@@ -53,6 +60,13 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     {
         foreach ($this->modulePackageLoader->load(self::MODULES_BASE_PATH) as $modulePackage) {
             $modulePackage->mergeAutoloads($rootPackage);
+        }
+    }
+
+    private function mergeRequires(RootPackageInterface $rootPackage): void
+    {
+        foreach ($this->modulePackageLoader->load(self::MODULES_BASE_PATH) as $modulePackage) {
+            $modulePackage->mergeRequires($rootPackage);
         }
     }
 }
