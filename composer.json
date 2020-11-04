@@ -1,0 +1,14 @@
+{
+    "name": "artemeon/composer-merge-plugin",
+    "description": "Composer plugin to merge composer.json files from AGP modules",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "ARTEMEON Management Partner GmbH",
+            "email": "development@artemeon.de"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    }
+}
