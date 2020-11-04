@@ -14,11 +14,18 @@
         "composer-plugin-api": "^1.1.0 || ^2.0.0"
     },
     "require-dev": {
-        "composer/composer": "^1.1.0 || ^2.0.0"
+        "composer/composer": "^1.1.0 || ^2.0.0",
+        "phpunit/phpunit": "^9.4",
+        "phpspec/prophecy-phpunit": "^2.0"
     },
     "autoload": {
         "psr-4": {
             "Artemeon\\Composer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Artemeon\\Composer\\Tests\\": "tests/"
         }
     },
     "extra": {
