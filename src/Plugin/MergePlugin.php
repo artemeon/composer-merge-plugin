@@ -8,11 +8,15 @@ use Artemeon\Composer\Module\ModulePackageLoader;
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\IO\IOInterface;
+use Composer\Package\RootPackageInterface;
 use Composer\Plugin\PluginInterface;
+use Composer\Script\Event as ScriptEvent;
+use Composer\Script\ScriptEvents;
 
 final class MergePlugin implements PluginInterface, EventSubscriberInterface
 {
     private const CALLBACK_PRIORITY = 50000;
+    private const MODULES_BASE_PATH = '../core';
 
     private Composer $composer;
     private IOInterface $io;
@@ -35,6 +39,20 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
 
     public static function getSubscribedEvents(): array
     {
-        return [];
+        return [
+            ScriptEvents::PRE_AUTOLOAD_DUMP => ['preAutoloadDump', static::CALLBACK_PRIORITY],
+        ];
+    }
+    public function preAutoloadDump(ScriptEvent $event): void
+    {
+        $rootPackage = $this->composer->getPackage();
+        $this->mergeAutoloads($rootPackage);
+    }
+
+    private function mergeAutoloads(RootPackageInterface $rootPackage): void
+    {
+        foreach ($this->modulePackageLoader->load(self::MODULES_BASE_PATH) as $modulePackage) {
+            $modulePackage->mergeAutoloads($rootPackage);
+        }
     }
 }
