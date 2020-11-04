@@ -18,10 +18,13 @@ use Composer\Plugin\PluginInterface;
 use Composer\Script\Event as ScriptEvent;
 use Composer\Script\ScriptEvents;
 
+use function glob;
+
 final class MergePlugin implements PluginInterface, EventSubscriberInterface
 {
     private const CALLBACK_PRIORITY = 50000;
     private const MODULES_BASE_PATH = '../core';
+    private const OVERRIDDEN_MODULES = './module_*';
 
     private Composer $composer;
     private IOInterface $io;
@@ -75,6 +78,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     {
         $rootPackage = $this->composer->getPackage();
         $this->mergeAutoloads($rootPackage);
+        $this->mergeAutoloadOverrides($rootPackage);
     }
 
     public function postPackageInstall(PackageEvent $event): void
@@ -86,6 +90,18 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     {
         foreach ($this->modulePackageLoader->load(self::MODULES_BASE_PATH) as $modulePackage) {
             $modulePackage->mergeAutoloads($rootPackage);
+        }
+    }
+
+    private function mergeAutoloadOverrides(RootPackageInterface $rootPackage): void
+    {
+        foreach (glob(self::OVERRIDDEN_MODULES) as $overriddenModule) {
+            $rootPackage->setAutoload(
+                array_merge_recursive(
+                    $rootPackage->getAutoload(),
+                    ['classmap' => [$overriddenModule]]
+                )
+            );
         }
     }
 
