@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Artemeon\Composer\Tests\Unit;
 
 use Composer\Json\JsonFile;
+use Composer\Package\Link;
 use Symfony\Component\Filesystem\Filesystem;
 
 use function array_merge;
@@ -36,6 +37,22 @@ trait ComposerFileAssumptions
         );
     }
 
+    public static function assumeAValidComposerFileConfigurationRequiring(array $requiresMap): array
+    {
+        return array_merge(
+            self::assumeAValidComposerFileConfiguration(),
+            ['require' => $requiresMap]
+        );
+    }
+
+    public static function assumeAValidComposerFileConfigurationDevRequiring(array $devRequiresMap): array
+    {
+        return array_merge(
+            self::assumeAValidComposerFileConfiguration(),
+            ['require-dev' => $devRequiresMap]
+        );
+    }
+
     public static function assumeAValidComposerFile(): JsonFile
     {
         return self::createTemporaryJsonFile(
@@ -54,6 +71,20 @@ trait ComposerFileAssumptions
     {
         return self::createTemporaryJsonFile(
             self::assumeAValidComposerFileConfigurationDevAutoloading($devAutoloadMap)
+        );
+    }
+
+    public static function assumeAValidComposerFileRequiring(array $requiresMap): JsonFile
+    {
+        return self::createTemporaryJsonFile(
+            self::assumeAValidComposerFileConfigurationRequiring($requiresMap)
+        );
+    }
+
+    public static function assumeAValidComposerFileDevRequiring(array $devRequiresMap): JsonFile
+    {
+        return self::createTemporaryJsonFile(
+            self::assumeAValidComposerFileConfigurationDevRequiring($devRequiresMap)
         );
     }
 

@@ -10,6 +10,7 @@ use Composer\Package\CompletePackage;
 use Composer\Package\Loader\ArrayLoader;
 use Composer\Package\RootPackageInterface;
 
+use function array_merge;
 use function array_merge_recursive;
 use function array_walk_recursive;
 use function dirname;
@@ -22,6 +23,39 @@ final class ModulePackage
     public function __construct(string $composerFile)
     {
         $this->composerFile = $composerFile;
+    }
+
+    /**
+     * @throws UnableToLoadModulePackageException
+     */
+    public function mergeRequires(RootPackageInterface $root): void
+    {
+        if (!isset($this->package)) {
+            $this->package = $this->loadPackage();
+        }
+
+        $this->mergeRequire($root);
+        $this->mergeRequireDev($root);
+    }
+
+    private function mergeRequire(RootPackageInterface $root): void
+    {
+        $root->setRequires(
+            array_merge(
+                $root->getRequires(),
+                $this->package->getRequires()
+            )
+        );
+    }
+
+    private function mergeRequireDev(RootPackageInterface $root): void
+    {
+        $root->setDevRequires(
+            array_merge(
+                $root->getDevRequires(),
+                $this->package->getDevRequires()
+            )
+        );
     }
 
     /**
