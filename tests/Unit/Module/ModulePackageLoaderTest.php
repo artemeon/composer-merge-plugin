@@ -4,100 +4,55 @@ declare(strict_types=1);
 
 namespace Artemeon\Composer\Tests\Unit\Module;
 
+use Artemeon\Composer\Module\ModuleFilter;
 use Artemeon\Composer\Module\ModulePackageLoader;
-use Closure;
 use Composer\IO\IOInterface;
+use Composer\IO\NullIO;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Symfony\Component\Filesystem\Filesystem;
 
-use function sys_get_temp_dir;
-
-use const DIRECTORY_SEPARATOR;
+use function dirname;
 
 final class ModulePackageLoaderTest extends TestCase
 {
     use ProphecyTrait;
 
-    private Filesystem $filesystem;
     private IOInterface $nullIo;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->filesystem = new Filesystem();
-        $this->nullIo = $this->prophesize(IOInterface::class)->reveal();
+        $this->nullIo = new NullIO();
     }
 
     public function testLoadsModulesAtTheGivenPath(): void
     {
-        $this->inWorkspaceContainingModulesNamed(['module_test1', 'module_test2'], function (string $basePath): void {
-            $modulePackageLoader = new ModulePackageLoader($this->nullIo);
-            self::assertCount(2, $modulePackageLoader->load($basePath));
-        });
+        $modulePackageLoader = new ModulePackageLoader($this->nullIo);
+        self::assertCount(2, $modulePackageLoader->load($this->fixturePath('two_modules')));
     }
 
     public function testOnlyLoadsModulesWhoseNameMatchesTheConvention(): void
     {
-        $this->inWorkspaceContainingModulesNamed(['module_test1', 'test2'], function (string $basePath): void {
-            $modulePackageLoader = new ModulePackageLoader($this->nullIo);
-            self::assertCount(1, $modulePackageLoader->load($basePath));
-        });
+        $modulePackageLoader = new ModulePackageLoader($this->nullIo);
+        self::assertCount(1, $modulePackageLoader->load($this->fixturePath('two_modules_one_invalid_name')));
     }
 
     public function testOnlyLoadsModulesWhichContainAPackageFile(): void
     {
-        $this->inWorkspaceContainingDirectoriesNamed(['module_test1'], function (string $basePath): void {
-            $modulePackageLoader = new ModulePackageLoader($this->nullIo);
-            self::assertCount(0, $modulePackageLoader->load($basePath));
-        });
+        $modulePackageLoader = new ModulePackageLoader($this->nullIo);
+        self::assertCount(1, $modulePackageLoader->load($this->fixturePath('one_module_and_one_directory')));
+        $modulePackageLoader = new ModulePackageLoader($this->nullIo);
+        self::assertCount(0, $modulePackageLoader->load($this->fixturePath('two_directories')));
     }
 
     public function testLoadsNothingIfNoModulesExistAtTheGivenPath(): void
     {
-        $this->inWorkspaceContainingDirectoriesNamed([], function (string $basePath): void {
-            $modulePackageLoader = new ModulePackageLoader($this->nullIo);
-            self::assertCount(0, $modulePackageLoader->load($basePath));
-        });
+        $modulePackageLoader = new ModulePackageLoader($this->nullIo);
+        self::assertCount(0, $modulePackageLoader->load($this->fixturePath('no_modules')));
     }
 
-    private function createWorkspaceWithDirectoriesNamed(string ...$directoryNames): string
+    private function fixturePath(string $name): string
     {
-        $basePath = $this->filesystem->tempnam(sys_get_temp_dir(), 'phpunit');
-        $this->filesystem->remove($basePath);
-        $this->filesystem->mkdir($basePath);
-
-        foreach ($directoryNames as $directoryName) {
-            $this->filesystem->mkdir($basePath . DIRECTORY_SEPARATOR . $directoryName);
-        }
-
-        return $basePath;
-    }
-
-    private function inWorkspaceContainingDirectoriesNamed(array $directoryNames, Closure $closure): void
-    {
-        $basePath = $this->createWorkspaceWithDirectoriesNamed(...$directoryNames);
-        $closure($basePath);
-        $this->filesystem->remove($basePath);
-    }
-
-    private function createWorkspaceWithModulesNamed(string ...$moduleNames): string
-    {
-        $basePath = $this->createWorkspaceWithDirectoriesNamed(...$moduleNames);
-
-        foreach ($moduleNames as $moduleName) {
-            $this->filesystem->touch(
-                $basePath . DIRECTORY_SEPARATOR . $moduleName . DIRECTORY_SEPARATOR . 'composer.json'
-            );
-        }
-
-        return $basePath;
-    }
-
-    private function inWorkspaceContainingModulesNamed(array $moduleNames, Closure $closure): void
-    {
-        $basePath = $this->createWorkspaceWithModulesNamed(...$moduleNames);
-        $closure($basePath);
-        $this->filesystem->remove($basePath);
+        return dirname(__DIR__) . '/fixtures/' . $name;
     }
 }

@@ -16,8 +16,7 @@
     "require-dev": {
         "composer/composer": "^1.1.0 || ^2.0.0",
         "phpunit/phpunit": "^9.4",
-        "phpspec/prophecy-phpunit": "^2.0",
-        "symfony/filesystem": "^5.1"
+        "phpspec/prophecy-phpunit": "^2.0"
     },
     "autoload": {
         "psr-4": {
