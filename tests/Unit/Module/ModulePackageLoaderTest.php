@@ -17,37 +17,37 @@ final class ModulePackageLoaderTest extends TestCase
 {
     use ProphecyTrait;
 
-    private IOInterface $nullIo;
+    private ModuleFilter $unrestrictedModuleFilter;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->nullIo = new NullIO();
+        $this->unrestrictedModuleFilter = ModuleFilter::unrestricted(new NullIO());
     }
 
     public function testLoadsModulesAtTheGivenPath(): void
     {
-        $modulePackageLoader = new ModulePackageLoader($this->nullIo);
+        $modulePackageLoader = new ModulePackageLoader($this->unrestrictedModuleFilter, new NullIO());
         self::assertCount(2, $modulePackageLoader->load($this->fixturePath('two_modules')));
     }
 
     public function testOnlyLoadsModulesWhoseNameMatchesTheConvention(): void
     {
-        $modulePackageLoader = new ModulePackageLoader($this->nullIo);
+        $modulePackageLoader = new ModulePackageLoader($this->unrestrictedModuleFilter, new NullIO());
         self::assertCount(1, $modulePackageLoader->load($this->fixturePath('two_modules_one_invalid_name')));
     }
 
     public function testOnlyLoadsModulesWhichContainAPackageFile(): void
     {
-        $modulePackageLoader = new ModulePackageLoader($this->nullIo);
+        $modulePackageLoader = new ModulePackageLoader($this->unrestrictedModuleFilter, new NullIO());
         self::assertCount(1, $modulePackageLoader->load($this->fixturePath('one_module_and_one_directory')));
-        $modulePackageLoader = new ModulePackageLoader($this->nullIo);
+        $modulePackageLoader = new ModulePackageLoader($this->unrestrictedModuleFilter, new NullIO());
         self::assertCount(0, $modulePackageLoader->load($this->fixturePath('two_directories')));
     }
 
     public function testLoadsNothingIfNoModulesExistAtTheGivenPath(): void
     {
-        $modulePackageLoader = new ModulePackageLoader($this->nullIo);
+        $modulePackageLoader = new ModulePackageLoader($this->unrestrictedModuleFilter, new NullIO());
         self::assertCount(0, $modulePackageLoader->load($this->fixturePath('no_modules')));
     }
 

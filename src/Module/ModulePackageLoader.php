@@ -6,6 +6,8 @@ namespace Artemeon\Composer\Module;
 
 use Composer\IO\IOInterface;
 
+use function basename;
+use function dirname;
 use function glob;
 use function rtrim;
 use function sprintf;
@@ -18,11 +20,14 @@ final class ModulePackageLoader
 {
     private const MODULE_COMPOSER_FILE_PATTERN = 'module_*/composer.json';
 
+    private ModuleFilter $moduleFilter;
     private IOInterface $io;
+
     private array $modulePackageCache = [];
 
-    public function __construct(IOInterface $io)
+    public function __construct(ModuleFilter $moduleFilter, IOInterface $io)
     {
+        $this->moduleFilter = $moduleFilter;
         $this->io = $io;
     }
 
@@ -31,8 +36,20 @@ final class ModulePackageLoader
      */
     public function load(string $basePath): iterable
     {
+        $this->io->debug(
+            sprintf(
+                'loading modules at <comment>%s</comment> using <comment>%s</comment>',
+                $basePath,
+                self::MODULE_COMPOSER_FILE_PATTERN
+            )
+        );
+
         foreach ($this->scanForComposerFiles($basePath) as $composerFile) {
-            yield $this->loadModule($composerFile);
+            $moduleName = basename(dirname($composerFile));
+
+            if ($this->moduleFilter->shouldLoad($moduleName)) {
+                yield $this->loadModule($composerFile);
+            }
         }
     }
 
@@ -44,7 +61,6 @@ final class ModulePackageLoader
             DIRECTORY_SEPARATOR,
             self::MODULE_COMPOSER_FILE_PATTERN
         );
-        $this->io->debug(sprintf('Loading modules using glob <comment>%s</comment>', $moduleComposerFilePattern));
 
         yield from glob($moduleComposerFilePattern, GLOB_NOSORT | GLOB_NOESCAPE);
     }
