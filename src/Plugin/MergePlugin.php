@@ -81,7 +81,11 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     {
         $rootPackage = $this->composer->getPackage();
         $this->mergeAutoloads($rootPackage);
-        $this->mergeAutoloadOverrides($rootPackage);
+
+        $overrides = $rootPackage->getExtra()['overrides'] ?? true;
+        if ($overrides) {
+            $this->mergeAutoloadOverrides($rootPackage);
+        }
     }
 
     public function postPackageInstall(PackageEvent $event): void
@@ -91,7 +95,12 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
 
     private function mergeAutoloads(RootPackageInterface $rootPackage): void
     {
-        foreach ($this->modulePackageLoader->load(self::MODULES_BASE_PATH) as $modulePackage) {
+        $basePath = $rootPackage->getExtra()['base_path'] ?? null;
+        if (empty($basePath) || !is_dir($basePath)) {
+            $basePath = self::MODULES_BASE_PATH;
+        }
+
+        foreach ($this->modulePackageLoader->load($basePath) as $modulePackage) {
             $modulePackage->mergeAutoloads($rootPackage);
         }
     }
