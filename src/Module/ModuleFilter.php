@@ -8,7 +8,7 @@ use Composer\IO\IOInterface;
 
 use function in_array;
 
-final class ModuleFilter
+final class ModuleFilter implements ModuleFilterInterface
 {
     /** @var string[]|null */
     private ?array $activeModules;

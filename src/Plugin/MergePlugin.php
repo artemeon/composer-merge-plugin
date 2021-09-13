@@ -6,6 +6,7 @@ namespace Artemeon\Composer\Plugin;
 
 use Artemeon\Composer\Module\ModuleFilterLoader;
 use Artemeon\Composer\Module\ModulePackageLoader;
+use Artemeon\Composer\Module\ModuleIncludeAllFilter;
 use Composer\Composer;
 use Composer\DependencyResolver\Operation\InstallOperation;
 use Composer\EventDispatcher\EventSubscriberInterface;
@@ -38,7 +39,14 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     {
         $this->composer = $composer;
         $this->io = $io;
-        $moduleFilter = (new ModuleFilterLoader($io))->load(self::FILTER_CONFIGURATION_PATH);
+
+        $packageConfig = $composer->getPackage()->getExtra()['packageconfig'] ?? true;
+        if ($packageConfig) {
+            $moduleFilter = (new ModuleFilterLoader($io))->load(self::FILTER_CONFIGURATION_PATH);
+        } else {
+            $moduleFilter = new ModuleIncludeAllFilter();
+        }
+
         $this->modulePackageLoader = new ModulePackageLoader($moduleFilter, $io);
     }
 
@@ -95,12 +103,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
 
     private function mergeAutoloads(RootPackageInterface $rootPackage): void
     {
-        $basePath = $rootPackage->getExtra()['base_path'] ?? null;
-        if (empty($basePath) || !is_dir($basePath)) {
-            $basePath = self::MODULES_BASE_PATH;
-        }
-
-        foreach ($this->modulePackageLoader->load($basePath) as $modulePackage) {
+        foreach ($this->modulePackageLoader->load($this->getBasePath($rootPackage)) as $modulePackage) {
             $modulePackage->mergeAutoloads($rootPackage);
         }
     }
@@ -119,7 +122,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
 
     private function mergeRequires(RootPackageInterface $rootPackage): void
     {
-        foreach ($this->modulePackageLoader->load(self::MODULES_BASE_PATH) as $modulePackage) {
+        foreach ($this->modulePackageLoader->load($this->getBasePath($rootPackage)) as $modulePackage) {
             $modulePackage->mergeRequires($rootPackage);
         }
     }
@@ -153,6 +156,16 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         if ($package === 'artemeon/composer-merge-plugin') {
             $this->io->info("{$package} installed");
             $this->isFirstInstall = true;
+        }
+    }
+
+    private function getBasePath(RootPackageInterface $rootPackage): string
+    {
+        $basePath = $rootPackage->getExtra()['base_path'] ?? null;
+        if (!empty($basePath) && is_dir($basePath)) {
+            return $basePath;
+        } else {
+            return self::MODULES_BASE_PATH;
         }
     }
 }

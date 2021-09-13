@@ -20,12 +20,12 @@ final class ModulePackageLoader
 {
     private const MODULE_COMPOSER_FILE_PATTERN = 'module_*/composer.json';
 
-    private ModuleFilter $moduleFilter;
+    private ModuleFilterInterface $moduleFilter;
     private IOInterface $io;
 
     private array $modulePackageCache = [];
 
-    public function __construct(ModuleFilter $moduleFilter, IOInterface $io)
+    public function __construct(ModuleFilterInterface $moduleFilter, IOInterface $io)
     {
         $this->moduleFilter = $moduleFilter;
         $this->io = $io;
