@@ -1,6 +1,7 @@
 {
     "name": "artemeon/composer-merge-plugin",
-    "description": "Composer plugin to merge composer.json files from AGP modules",
+    "description": "Composer plugin to merge composer.json files from AGP modules.",
+    "homepage": "https://github.com/artemeon/composer-merge-plugin#readme",
     "type": "composer-plugin",
     "license": "MIT",
     "authors": [
