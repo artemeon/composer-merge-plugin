@@ -28,27 +28,21 @@ final class ModulePackageLoaderTest extends TestCase
     public function testLoadsModulesAtTheGivenPath(): void
     {
         $modulePackageLoader = new ModulePackageLoader($this->unrestrictedModuleFilter, new NullIO());
-        self::assertCount(2, $modulePackageLoader->load($this->fixturePath('two_modules')));
-    }
-
-    public function testOnlyLoadsModulesWhoseNameMatchesTheConvention(): void
-    {
-        $modulePackageLoader = new ModulePackageLoader($this->unrestrictedModuleFilter, new NullIO());
-        self::assertCount(1, $modulePackageLoader->load($this->fixturePath('two_modules_one_invalid_name')));
+        self::assertCount(2, iterator_to_array($modulePackageLoader->load($this->fixturePath('two_modules'))));
     }
 
     public function testOnlyLoadsModulesWhichContainAPackageFile(): void
     {
         $modulePackageLoader = new ModulePackageLoader($this->unrestrictedModuleFilter, new NullIO());
-        self::assertCount(1, $modulePackageLoader->load($this->fixturePath('one_module_and_one_directory')));
+        self::assertCount(1, iterator_to_array($modulePackageLoader->load($this->fixturePath('one_module_and_one_directory'))));
         $modulePackageLoader = new ModulePackageLoader($this->unrestrictedModuleFilter, new NullIO());
-        self::assertCount(0, $modulePackageLoader->load($this->fixturePath('two_directories')));
+        self::assertCount(0, iterator_to_array($modulePackageLoader->load($this->fixturePath('two_directories'))));
     }
 
     public function testLoadsNothingIfNoModulesExistAtTheGivenPath(): void
     {
         $modulePackageLoader = new ModulePackageLoader($this->unrestrictedModuleFilter, new NullIO());
-        self::assertCount(0, $modulePackageLoader->load($this->fixturePath('no_modules')));
+        self::assertCount(0, iterator_to_array($modulePackageLoader->load($this->fixturePath('no_modules'))));
     }
 
     private function fixturePath(string $name): string

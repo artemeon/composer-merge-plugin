@@ -17,7 +17,7 @@ final class ModuleFilterLoaderTest extends TestCase
     public function testLoadsUnrestrictedModuleFilterIfNoConfigurationIsPresent(): void
     {
         $moduleFilterLoader = new ModuleFilterLoader(new NullIO());
-        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('no_module_filter_configuration'));
+        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('no_module_filter_configuration', 'apps/default/libs.json'), $this->fixturePath('no_module_filter_configuration', '.projectrc.json'));
 
         self::assertTrue($moduleFilter->shouldLoad('invalid_module_name'));
     }
@@ -25,7 +25,7 @@ final class ModuleFilterLoaderTest extends TestCase
     public function testLoadsUnrestrictedModuleFilterIfConfigurationIsInvalid(): void
     {
         $moduleFilterLoader = new ModuleFilterLoader(new NullIO());
-        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('invalid_module_filter_configuration'));
+        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('invalid_module_filter_configuration', 'apps/default/libs.json'), $this->fixturePath('invalid_module_filter_configuration', '.projectrc.json'));
 
         self::assertTrue($moduleFilter->shouldLoad('invalid_module_name'));
     }
@@ -33,15 +33,15 @@ final class ModuleFilterLoaderTest extends TestCase
     public function testLoadsRestrictedModuleFilterIfConfigurationIsValid(): void
     {
         $moduleFilterLoader = new ModuleFilterLoader(new ConsoleIO(new ArrayInput([]), new ConsoleOutput(), new HelperSet()));
-        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('valid_module_filter_configuration'));
+        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('valid_module_filter_configuration', 'apps/default/libs.json'), $this->fixturePath('valid_module_filter_configuration', '.projectrc.json'));
 
-        self::assertTrue($moduleFilter->shouldLoad('module_test1'));
-        self::assertTrue($moduleFilter->shouldLoad('module_test2'));
+        self::assertTrue($moduleFilter->shouldLoad('test1'));
+        self::assertTrue($moduleFilter->shouldLoad('test2'));
         self::assertFalse($moduleFilter->shouldLoad('invalid_module_name'));
     }
 
-    private function fixturePath(string $name): string
+    private function fixturePath(string $name, string $file): string
     {
-        return dirname(__DIR__) . '/fixtures/' . $name . '/packageconfig.json';
+        return dirname(__DIR__) . '/fixtures/' . $name . '/' . $file;
     }
 }

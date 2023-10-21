@@ -25,9 +25,10 @@ use function glob;
 final class MergePlugin implements PluginInterface, EventSubscriberInterface
 {
     private const CALLBACK_PRIORITY = 50000;
-    private const MODULES_BASE_PATH = '../core';
-    private const OVERRIDDEN_MODULES = './module_*';
-    private const FILTER_CONFIGURATION_PATH = './packageconfig.json';
+    private const MODULES_BASE_PATH = './libs';
+    private const OVERRIDDEN_MODULES = './*';
+    private const PROJECTRC_PATH = './.projectrc.json';
+    private const FILTER_CONFIGURATION_PATH = 'libs.json';
 
     private Composer $composer;
     private IOInterface $io;
@@ -42,7 +43,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
 
         $packageConfig = $composer->getPackage()->getExtra()['packageconfig'] ?? true;
         if ($packageConfig) {
-            $moduleFilter = (new ModuleFilterLoader($io))->load(self::FILTER_CONFIGURATION_PATH);
+            $moduleFilter = (new ModuleFilterLoader($io))->load(self::FILTER_CONFIGURATION_PATH, self::PROJECTRC_PATH);
         } else {
             $moduleFilter = new ModuleIncludeAllFilter();
         }

@@ -23,10 +23,20 @@ final class ModuleFilterLoader
         $this->io = $io;
     }
 
-    public function load(string $configurationFilePath): ModuleFilter
+    public function load(string $configurationFilePath, string $projectConfigurationFilePath): ModuleFilter
     {
+        $projectConfiguration = $this->readJsonFile($projectConfigurationFilePath);
+        $project = 'default';
+        if (isset($projectConfiguration) && $this->validateProject($projectConfiguration)) {
+            $project = $projectConfiguration->app;
+        }
+
+        if (!is_dir('./apps/' . $project)) {
+            $project = 'default';
+        }
+
         $this->io->debug(
-            sprintf('loading module filter configuration at <comment>%s</comment>', $configurationFilePath)
+            sprintf('loading module filter configuration at <comment>%s</comment>', './apps/' . $project . '/' . $configurationFilePath)
         );
 
         $configurationData = $this->readJsonFile($configurationFilePath);
@@ -38,13 +48,13 @@ final class ModuleFilterLoader
             return ModuleFilter::unrestricted($this->io);
         }
 
-        return ModuleFilter::restrictedTo($configurationData->core, $this->io);
+        return ModuleFilter::restrictedTo($configurationData, $this->io);
     }
 
     /**
      * @return mixed|null
      */
-    private function readJsonFile(string $filePath)
+    private function readJsonFile(string $filePath): mixed
     {
         $fileContents = @file_get_contents($filePath);
         if ($fileContents === false) {
@@ -64,19 +74,36 @@ final class ModuleFilterLoader
         return $jsonData;
     }
 
-    /**
-     * @param mixed $configurationData
-     */
-    private function validateConfiguration($configurationData): bool
+    private function validateConfiguration(mixed $configurationData): bool
     {
         $validator = new Validator();
         $validator->validate(
             $configurationData,
-            (object)['$ref' => 'file://' . dirname(__DIR__, 2) . '/packageconfig.schema.json']
+            (object)['$ref' => 'file://' . dirname(__DIR__, 2) . '/libs.schema.json']
         );
 
         if (!$validator->isValid()) {
             $this->io->warning('invalid module filter configuration');
+            foreach ($validator->getErrors() as $error) {
+                $this->io->warning(sprintf('</>	%s: %s', $error['property'], $error['message']));
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private function validateProject(mixed $configurationData): bool
+    {
+        $validator = new Validator();
+        $validator->validate(
+            $configurationData,
+            (object)['$ref' => 'file://' . dirname(__DIR__, 2) . '/projectrc.schema.json']
+        );
+
+        if (!$validator->isValid()) {
+            $this->io->warning('invalid project configuration');
             foreach ($validator->getErrors() as $error) {
                 $this->io->warning(sprintf('</>	%s: %s', $error['property'], $error['message']));
             }

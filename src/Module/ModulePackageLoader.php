@@ -18,7 +18,7 @@ use const GLOB_NOSORT;
 
 final class ModulePackageLoader
 {
-    private const MODULE_COMPOSER_FILE_PATTERN = 'module_*/composer.json';
+    private const MODULE_COMPOSER_FILE_PATTERN = '*/composer.json';
 
     private ModuleFilterInterface $moduleFilter;
     private IOInterface $io;

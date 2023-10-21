@@ -29,7 +29,7 @@ final class ModuleFilterTest extends TestCase
     public function testOnlyApprovesLoadingModulesItWasRestrictedTo(): void
     {
         $allModuleNames = $this->aFewModuleNames();
-        $approvedModuleNames = array_slice($allModuleNames, 0, ceil(count($allModuleNames) / 2));
+        $approvedModuleNames = array_slice($allModuleNames, 0, (int) ceil(count($allModuleNames) / 2));
         shuffle($allModuleNames);
 
         $moduleFilter = ModuleFilter::restrictedTo($approvedModuleNames, new NullIO());
@@ -48,7 +48,7 @@ final class ModuleFilterTest extends TestCase
         $moduleNames = [];
         for ($iteration = 0; $iteration < 10; ++$iteration) {
             /** @noinspection PhpUnhandledExceptionInspection because entropy gathering issues are out of scope here */
-            $moduleNames[] = 'module_' . random_bytes(8);
+            $moduleNames[] = random_bytes(8);
         }
 
         return $moduleNames;
