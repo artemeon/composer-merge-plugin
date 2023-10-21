@@ -59,6 +59,7 @@ final class ModuleFilterLoader
         $fileContents = @file_get_contents($filePath);
         if ($fileContents === false) {
             $this->io->warning('no module filter configuration given');
+            $this->io->warning($filePath);
 
             return null;
         }
