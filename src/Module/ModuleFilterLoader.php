@@ -39,7 +39,7 @@ final class ModuleFilterLoader
             sprintf('loading module filter configuration at <comment>%s</comment>', './apps/' . $project . '/' . $configurationFilePath)
         );
 
-        $configurationData = $this->readJsonFile($configurationFilePath);
+        $configurationData = $this->readJsonFile('./apps/' . $project . '/' . $configurationFilePath);
         if (!isset($configurationData)) {
             return ModuleFilter::unrestricted($this->io);
         }
