@@ -34,6 +34,8 @@ final class ModuleFilterLoader
         }
 
         if (!is_dir('./apps/' . $project)) {
+            $this->io->warning('Directory ./apps/' . $project . ' does not exist. Falling back to `default` project.');
+
             $project = 'default';
         }
 
