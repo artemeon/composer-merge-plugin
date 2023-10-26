@@ -25,15 +25,21 @@ final class ModuleFilterLoader
 
     public function load(string $configurationFilePath, string $projectConfigurationFilePath): ModuleFilter
     {
-        $projectConfiguration = $this->readJsonFile($projectConfigurationFilePath);
         $project = 'default';
-        if (isset($projectConfiguration) && $this->validateProject($projectConfiguration)) {
-            $project = $projectConfiguration->app;
+        if (is_file($projectConfigurationFilePath)) {
+            $projectConfiguration = $this->readJsonFile($projectConfigurationFilePath);
+            if ($this->validateProject($projectConfiguration)) {
+                $project = $projectConfiguration->app;
+            }
         }
 
         if (!is_dir('./apps/' . $project)) {
             $project = 'default';
         }
+
+        $this->io->info('');
+        $this->io->info(' Project: ' . $project);
+        $this->io->info('');
 
         $this->io->debug(
             sprintf('loading module filter configuration at <comment>%s</comment>', './apps/' . $project . '/' . $configurationFilePath)
