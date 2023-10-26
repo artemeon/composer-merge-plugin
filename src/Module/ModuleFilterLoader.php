@@ -37,9 +37,9 @@ final class ModuleFilterLoader
             $project = 'default';
         }
 
-        $this->io->info('');
-        $this->io->info(' Project: ' . $project);
-        $this->io->info('');
+        $this->io->write('');
+        $this->io->write(' Project: ' . $project);
+        $this->io->write('');
 
         $this->io->debug(
             sprintf('loading module filter configuration at <comment>%s</comment>', './apps/' . $project . '/' . $configurationFilePath)
