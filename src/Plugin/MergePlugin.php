@@ -67,6 +67,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
             ScriptEvents::POST_INSTALL_CMD => ['postInstallOrUpdate', static::CALLBACK_PRIORITY],
             ScriptEvents::POST_UPDATE_CMD => ['postInstallOrUpdate', static::CALLBACK_PRIORITY],
             ScriptEvents::PRE_AUTOLOAD_DUMP => ['preAutoloadDump', static::CALLBACK_PRIORITY],
+            PackageEvents::PRE_PACKAGE_INSTALL => ['prePackageInstall', static::CALLBACK_PRIORITY],
             PackageEvents::POST_PACKAGE_INSTALL => ['postPackageInstall', static::CALLBACK_PRIORITY],
         ];
     }
@@ -94,6 +95,20 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         $overrides = $rootPackage->getExtra()['overrides'] ?? true;
         if ($overrides) {
             $this->mergeAutoloadOverrides($rootPackage);
+        }
+    }
+
+    public function prePackageInstall(PackageEvent $event): void
+    {
+        $operation = $event->getOperation();
+        if (!($operation instanceof InstallOperation)) {
+            return;
+        }
+        $package = $operation->getPackage();
+        $packageName = $package->getName();
+
+        if (str_starts_with($packageName, 'agp/')) {
+            $event->stopPropagation();
         }
     }
 
