@@ -38,7 +38,25 @@ final class ModuleFilterLoader
             return ModuleFilter::unrestricted($this->io);
         }
 
-        return ModuleFilter::restrictedTo($configurationData->core, $this->io);
+        return ModuleFilter::restrictedTo(
+            activeModules: array_values(array_unique([...$this->getDefaultModules(), ...$configurationData->core])),
+            io: $this->io,
+        );
+    }
+
+    private function getDefaultModules(): array
+    {
+        $modules = [];
+        $configPath = '../core/.modulesrc.json';
+        if (is_file($configPath)) {
+            try {
+                $config = json_decode(file_get_contents($configPath), false, 512, JSON_THROW_ON_ERROR);
+                $modules = $config->modules;
+            } catch (JsonException) {
+            }
+        }
+
+        return $modules;
     }
 
     /**
