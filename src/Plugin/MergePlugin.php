@@ -43,10 +43,14 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
 
         $packageConfig = $composer->getPackage()->getExtra()['packageconfig'] ?? true;
         if ($packageConfig) {
-            $project = trim(file_get_contents(self::PROJECT) ?? '');
-            $this->io->alert('Project: ' . $project);
+            $project = 'default';
+            if (is_file(self::PROJECT)) {
+                $project = trim(file_get_contents(self::PROJECT) ?? $project);
+            }
 
-            $moduleFilter = (new ModuleFilterLoader($io))->load(self::FILTER_CONFIGURATION_PATH);
+            $filterFilePath = sprintf('./apps/%s/%s', $project, self::FILTER_CONFIGURATION_PATH);
+
+            $moduleFilter = (new ModuleFilterLoader($io))->load($filterFilePath);
         } else {
             $moduleFilter = new ModuleIncludeAllFilter();
         }
