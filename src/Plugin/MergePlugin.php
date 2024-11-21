@@ -28,6 +28,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     private const MODULES_BASE_PATH = 'core';
     private const OVERRIDDEN_MODULES = './module_*';
     private const FILTER_CONFIGURATION_PATH = './packageconfig.json';
+    private const PROJECT = './.projectrc';
 
     private Composer $composer;
     private IOInterface $io;
@@ -42,6 +43,9 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
 
         $packageConfig = $composer->getPackage()->getExtra()['packageconfig'] ?? true;
         if ($packageConfig) {
+            $project = trim(file_get_contents(self::PROJECT) ?? '');
+            $this->io->alert('Project: ' . $project);
+
             $moduleFilter = (new ModuleFilterLoader($io))->load(self::FILTER_CONFIGURATION_PATH);
         } else {
             $moduleFilter = new ModuleIncludeAllFilter();
@@ -61,12 +65,12 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            ScriptEvents::PRE_INSTALL_CMD => ['preInstallOrUpdate', static::CALLBACK_PRIORITY],
-            ScriptEvents::PRE_UPDATE_CMD => ['preInstallOrUpdate', static::CALLBACK_PRIORITY],
-            ScriptEvents::POST_INSTALL_CMD => ['postInstallOrUpdate', static::CALLBACK_PRIORITY],
-            ScriptEvents::POST_UPDATE_CMD => ['postInstallOrUpdate', static::CALLBACK_PRIORITY],
-            ScriptEvents::PRE_AUTOLOAD_DUMP => ['preAutoloadDump', static::CALLBACK_PRIORITY],
-            PackageEvents::POST_PACKAGE_INSTALL => ['postPackageInstall', static::CALLBACK_PRIORITY],
+            ScriptEvents::PRE_INSTALL_CMD => ['preInstallOrUpdate', self::CALLBACK_PRIORITY],
+            ScriptEvents::PRE_UPDATE_CMD => ['preInstallOrUpdate', self::CALLBACK_PRIORITY],
+            ScriptEvents::POST_INSTALL_CMD => ['postInstallOrUpdate', self::CALLBACK_PRIORITY],
+            ScriptEvents::POST_UPDATE_CMD => ['postInstallOrUpdate', self::CALLBACK_PRIORITY],
+            ScriptEvents::PRE_AUTOLOAD_DUMP => ['preAutoloadDump', self::CALLBACK_PRIORITY],
+            PackageEvents::POST_PACKAGE_INSTALL => ['postPackageInstall', self::CALLBACK_PRIORITY],
         ];
     }
 
