@@ -20,6 +20,8 @@ use Composer\Plugin\PluginInterface;
 use Composer\Script\Event as ScriptEvent;
 use Composer\Script\ScriptEvents;
 
+use Exception;
+
 use function glob;
 
 final class MergePlugin implements PluginInterface, EventSubscriberInterface
@@ -34,7 +36,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     private IOInterface $io;
     private ModulePackageLoader $modulePackageLoader;
 
-    protected bool $isFirstInstall = false;
+    private bool $isFirstInstall = false;
 
     public function activate(Composer $composer, IOInterface $io): void
     {
@@ -83,6 +85,9 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         $this->mergeRequires($this->composer->getPackage());
     }
 
+    /**
+     * @throws Exception
+     */
     public function postInstallOrUpdate(ScriptEvent $event): void
     {
         if (!$this->isFirstInstall) {
@@ -135,6 +140,9 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         }
     }
 
+    /**
+     * @throws Exception
+     */
     private function runAdditionalUpdateToApplyMergedConfiguration(ScriptEvent $event): void
     {
         $this->io->info('<comment>Running additional update to apply merged configuration</comment>');
@@ -147,7 +155,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         $installer->setPreferSource($preferSource);
         $installer->setPreferDist($preferDist);
         $installer->setDevMode($event->isDevMode());
-        $installer->setDumpAutoloader(true);
+        $installer->setDumpAutoloader();
         $installer->setOptimizeAutoloader(false);
         $installer->setUpdate(true);
         $installer->run();
@@ -162,7 +170,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
 
         $package = $operation->getPackage()->getName();
         if ($package === 'artemeon/composer-merge-plugin') {
-            $this->io->info("{$package} installed");
+            $this->io->info("$package installed");
             $this->isFirstInstall = true;
         }
     }
@@ -172,8 +180,8 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         $basePath = $rootPackage->getExtra()['base_path'] ?? null;
         if (!empty($basePath) && is_dir($basePath)) {
             return $basePath;
-        } else {
-            return self::MODULES_BASE_PATH;
         }
+
+        return self::MODULES_BASE_PATH;
     }
 }
