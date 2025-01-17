@@ -50,6 +50,10 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
                 $project = trim(file_get_contents(self::PROJECT) ?? $project);
             }
 
+            if (count($apps = glob('apps/*', GLOB_ONLYDIR)) === 1) {
+                $project = basename($apps[0]);
+            }
+
             $filterFilePath = sprintf('./apps/%s/%s', $project, self::FILTER_CONFIGURATION_PATH);
 
             $moduleFilter = (new ModuleFilterLoader($io))->load($filterFilePath);
