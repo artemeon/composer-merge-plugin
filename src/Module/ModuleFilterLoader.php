@@ -38,8 +38,8 @@ final class ModuleFilterLoader
             return ModuleFilter::unrestricted($this->io);
         }
 
-        $baseConfigurationData = $this->readJsonFile($baseConfigurationFilePath);
-        $localConfigurationData = $this->readJsonFile($localConfigurationFilePath);
+        $baseConfigurationData = $this->readJsonFile($baseConfigurationFilePath, false);
+        $localConfigurationData = $this->readJsonFile($localConfigurationFilePath, false);
 
         $mergedConfiguration = array_values(array_unique([...$configurationData->core, ...($baseConfigurationData ?? []), ...($localConfigurationData ?? [])]));
 
@@ -49,11 +49,13 @@ final class ModuleFilterLoader
     /**
      * @return mixed|null
      */
-    private function readJsonFile(string $filePath)
+    private function readJsonFile(string $filePath, bool $warning = true)
     {
         $fileContents = @file_get_contents($filePath);
         if ($fileContents === false) {
-            $this->io->warning('no module filter configuration given');
+            if ($warning) {
+                $this->io->warning('no module filter configuration given');
+            }
 
             return null;
         }
