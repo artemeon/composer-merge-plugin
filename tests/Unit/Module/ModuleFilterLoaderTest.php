@@ -17,7 +17,7 @@ final class ModuleFilterLoaderTest extends TestCase
     public function testLoadsUnrestrictedModuleFilterIfNoConfigurationIsPresent(): void
     {
         $moduleFilterLoader = new ModuleFilterLoader(new NullIO());
-        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('no_module_filter_configuration'));
+        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('no_module_filter_configuration'), dirname(__DIR__) . '/fixtures/base-modules.json', dirname(__DIR__) . '/fixtures/local-modules.json');
 
         self::assertTrue($moduleFilter->shouldLoad('invalid_module_name'));
     }
@@ -25,7 +25,7 @@ final class ModuleFilterLoaderTest extends TestCase
     public function testLoadsUnrestrictedModuleFilterIfConfigurationIsInvalid(): void
     {
         $moduleFilterLoader = new ModuleFilterLoader(new NullIO());
-        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('invalid_module_filter_configuration'));
+        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('invalid_module_filter_configuration'), dirname(__DIR__) . '/fixtures/base-modules.json', dirname(__DIR__) . '/fixtures/local-modules.json');
 
         self::assertTrue($moduleFilter->shouldLoad('invalid_module_name'));
     }
@@ -33,11 +33,27 @@ final class ModuleFilterLoaderTest extends TestCase
     public function testLoadsRestrictedModuleFilterIfConfigurationIsValid(): void
     {
         $moduleFilterLoader = new ModuleFilterLoader(new ConsoleIO(new ArrayInput([]), new ConsoleOutput(), new HelperSet()));
-        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('valid_module_filter_configuration'));
+        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('valid_module_filter_configuration'), dirname(__DIR__) . '/fixtures/base-modules.json', dirname(__DIR__) . '/fixtures/local-modules.json');
 
         self::assertTrue($moduleFilter->shouldLoad('module_test1'));
         self::assertTrue($moduleFilter->shouldLoad('module_test2'));
         self::assertFalse($moduleFilter->shouldLoad('invalid_module_name'));
+    }
+
+    public function testLoadsBaseModules(): void
+    {
+        $moduleFilterLoader = new ModuleFilterLoader(new ConsoleIO(new ArrayInput([]), new ConsoleOutput(), new HelperSet()));
+        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('valid_module_filter_configuration'), dirname(__DIR__) . '/fixtures/base-modules.json', dirname(__DIR__) . '/fixtures/local-modules.json');
+
+        self::assertTrue($moduleFilter->shouldLoad('module_base'));
+    }
+
+    public function testLoadsLocalModules(): void
+    {
+        $moduleFilterLoader = new ModuleFilterLoader(new ConsoleIO(new ArrayInput([]), new ConsoleOutput(), new HelperSet()));
+        $moduleFilter = $moduleFilterLoader->load($this->fixturePath('valid_module_filter_configuration'), dirname(__DIR__) . '/fixtures/base-modules.json', dirname(__DIR__) . '/fixtures/local-modules.json');
+
+        self::assertTrue($moduleFilter->shouldLoad('module_dev_local'));
     }
 
     private function fixturePath(string $name): string

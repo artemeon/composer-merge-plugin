@@ -55,8 +55,10 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
             }
 
             $filterFilePath = sprintf('./apps/%s/%s', $project, self::FILTER_CONFIGURATION_PATH);
+            $baseFilePath = './default-packages.json';
+            $localFilePath = './packages.json';
 
-            $moduleFilter = (new ModuleFilterLoader($io))->load($filterFilePath);
+            $moduleFilter = (new ModuleFilterLoader($io))->load($filterFilePath, $baseFilePath, $localFilePath);
         } else {
             $moduleFilter = new ModuleIncludeAllFilter();
         }

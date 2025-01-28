@@ -23,7 +23,7 @@ final class ModuleFilterLoader
         $this->io = $io;
     }
 
-    public function load(string $configurationFilePath): ModuleFilter
+    public function load(string $configurationFilePath, string $baseConfigurationFilePath, string $localConfigurationFilePath): ModuleFilter
     {
         $this->io->debug(
             sprintf('loading module filter configuration at <comment>%s</comment>', $configurationFilePath)
@@ -38,7 +38,12 @@ final class ModuleFilterLoader
             return ModuleFilter::unrestricted($this->io);
         }
 
-        return ModuleFilter::restrictedTo($configurationData->core, $this->io);
+        $baseConfigurationData = $this->readJsonFile($baseConfigurationFilePath);
+        $localConfigurationData = $this->readJsonFile($localConfigurationFilePath);
+
+        $mergedConfiguration = array_values(array_unique([...$configurationData->core, ...($baseConfigurationData ?? []), ...($localConfigurationData ?? [])]));
+
+        return ModuleFilter::restrictedTo($mergedConfiguration, $this->io);
     }
 
     /**
