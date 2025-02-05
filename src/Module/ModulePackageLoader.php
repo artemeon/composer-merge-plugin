@@ -6,8 +6,6 @@ namespace Artemeon\Composer\Module;
 
 use Composer\IO\IOInterface;
 
-use function basename;
-use function dirname;
 use function glob;
 use function rtrim;
 use function sprintf;
@@ -19,15 +17,12 @@ use const GLOB_NOSORT;
 final class ModulePackageLoader
 {
     private const MODULE_COMPOSER_FILE_PATTERN = 'module_*/composer.json';
-
-    private ModuleFilterInterface $moduleFilter;
     private IOInterface $io;
 
     private array $modulePackageCache = [];
 
-    public function __construct(ModuleFilterInterface $moduleFilter, IOInterface $io)
+    public function __construct(IOInterface $io)
     {
-        $this->moduleFilter = $moduleFilter;
         $this->io = $io;
     }
 
@@ -45,11 +40,7 @@ final class ModulePackageLoader
         );
 
         foreach ($this->scanForComposerFiles($basePath) as $composerFile) {
-            $moduleName = basename(dirname($composerFile));
-
-            if ($this->moduleFilter->shouldLoad($moduleName)) {
-                yield $this->loadModule($composerFile);
-            }
+            yield $this->loadModule($composerFile);
         }
     }
 
