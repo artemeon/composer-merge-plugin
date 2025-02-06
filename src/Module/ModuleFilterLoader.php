@@ -24,18 +24,20 @@ final readonly class ModuleFilterLoader
             return ModuleFilter::unrestricted();
         }
 
-        $localConfigurationData = $this->readJsonFile($localConfigurationFilePath);
+        $localConfigurationData = $this->readJsonFile($localConfigurationFilePath, false);
 
         $mergedConfiguration = array_values(array_unique([...$configurationData->core, ...($localConfigurationData ?? [])]));
 
         return ModuleFilter::restrictedTo($mergedConfiguration);
     }
 
-    private function readJsonFile(string $filePath): ?object
+    private function readJsonFile(string $filePath, bool $warnMissingFile = true): ?object
     {
         $fileContents = @file_get_contents($filePath);
         if ($fileContents === false) {
-            $this->io->warning('No module filter configuration found');
+            if ($warnMissingFile) {
+                $this->io->warning('No module filter configuration found');
+            }
 
             return null;
         }
