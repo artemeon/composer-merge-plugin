@@ -24,6 +24,10 @@ final readonly class ModuleFilterLoader
             return ModuleFilter::unrestricted();
         }
 
+        if (count($configurationData->core) === 0) {
+            return ModuleFilter::unrestricted();
+        }
+
         $localConfigurationData = $this->readJsonFile($localConfigurationFilePath, false);
 
         $mergedConfiguration = array_values(array_unique([...$configurationData->core, ...($localConfigurationData ?? [])]));
