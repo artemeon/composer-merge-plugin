@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Artemeon\Composer\Plugin;
 
+use Artemeon\Composer\Module\ModuleFilterLoader;
+use Artemeon\Composer\Module\ModuleIncludeAllFilter;
 use Artemeon\Composer\Module\ModulePackageLoader;
 use Composer\Composer;
 use Composer\DependencyResolver\Operation\InstallOperation;
@@ -27,6 +29,8 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     private const CALLBACK_PRIORITY = 50000;
     private const MODULES_BASE_PATH = 'core';
     private const OVERRIDDEN_MODULES = './module_*';
+    private const FILTER_CONFIGURATION_PATH = './packageconfig.json';
+    private const PROJECT = './.projectrc';
 
     private Composer $composer;
     private IOInterface $io;
@@ -39,7 +43,25 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         $this->composer = $composer;
         $this->io = $io;
 
-        $this->modulePackageLoader = new ModulePackageLoader($io);
+        $packageConfig = $composer->getPackage()->getExtra()['packageconfig'] ?? true;
+        if ($packageConfig) {
+            $project = 'default';
+            if (is_file(self::PROJECT)) {
+                $project = trim(file_get_contents(self::PROJECT) ?? $project);
+            }
+            if (count($apps = glob('apps/*', GLOB_ONLYDIR)) === 1) {
+                $project = basename($apps[0]);
+            }
+
+            $filterFilePath = sprintf('./apps/%s/%s', $project, self::FILTER_CONFIGURATION_PATH);
+            $localFilePath = self::FILTER_CONFIGURATION_PATH;
+
+            $moduleFilter = (new ModuleFilterLoader($io))->load($filterFilePath, $localFilePath);
+        } else {
+            $moduleFilter = new ModuleIncludeAllFilter();
+        }
+
+        $this->modulePackageLoader = new ModulePackageLoader($moduleFilter, $io);
     }
 
     public function deactivate(Composer $composer, IOInterface $io): void
@@ -117,7 +139,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
 
     private function mergeRequires(RootPackageInterface $rootPackage): void
     {
-        foreach ($this->modulePackageLoader->load($this->getBasePath($rootPackage)) as $modulePackage) {
+        foreach ($this->modulePackageLoader->load($this->getBasePath($rootPackage), true) as $modulePackage) {
             $modulePackage->mergeRequires($rootPackage);
         }
     }

@@ -17,19 +17,21 @@ use const GLOB_NOSORT;
 final class ModulePackageLoader
 {
     private const MODULE_COMPOSER_FILE_PATTERN = 'module_*/composer.json';
+    private ModuleFilterInterface $moduleFilter;
     private IOInterface $io;
 
     private array $modulePackageCache = [];
 
-    public function __construct(IOInterface $io)
+    public function __construct(ModuleFilterInterface $moduleFilter, IOInterface $io)
     {
+        $this->moduleFilter = $moduleFilter;
         $this->io = $io;
     }
 
     /**
      * @return ModulePackage[]
      */
-    public function load(string $basePath): iterable
+    public function load(string $basePath, bool $forceAll = false): iterable
     {
         $this->io->debug(
             sprintf(
@@ -40,7 +42,11 @@ final class ModulePackageLoader
         );
 
         foreach ($this->scanForComposerFiles($basePath) as $composerFile) {
-            yield $this->loadModule($composerFile);
+            $moduleName = basename(dirname($composerFile));
+
+            if ($forceAll || $this->moduleFilter->shouldLoad($moduleName)) {
+                yield $this->loadModule($composerFile);
+            }
         }
     }
 
