@@ -40,12 +40,10 @@ final class ModulePackage
 
     private function mergeRequire(RootPackageInterface $root): void
     {
-        var_dump(array_keys($this->package->getRequires()));
-
         $root->setRequires(
             array_merge(
                 $root->getRequires(),
-                array_filter($this->package->getRequires(), static fn (string $name): bool => !str_starts_with($name, 'agp/')),
+                array_filter($this->package->getRequires(), static fn (string $name): bool => !str_starts_with($name, 'agp/'), ARRAY_FILTER_USE_KEY),
             )
         );
     }
