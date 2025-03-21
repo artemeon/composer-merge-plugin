@@ -40,7 +40,7 @@ final class ModulePackage
 
     private function mergeRequire(RootPackageInterface $root): void
     {
-        var_dump($this->package->getRequires());
+        var_dump(array_keys($this->package->getRequires()));
 
         $root->setRequires(
             array_merge(
