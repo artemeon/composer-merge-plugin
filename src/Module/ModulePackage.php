@@ -43,7 +43,7 @@ final class ModulePackage
         $root->setRequires(
             array_merge(
                 $root->getRequires(),
-                $this->package->getRequires()
+                array_filter($this->package->getRequires(), static fn (string $name): bool => !str_starts_with($name, 'agp/'), ARRAY_FILTER_USE_KEY),
             )
         );
     }
