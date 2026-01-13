@@ -36,8 +36,6 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
     private IOInterface $io;
     private ModulePackageLoader $modulePackageLoader;
 
-    private bool $isFirstInstall = false;
-
     public function activate(Composer $composer, IOInterface $io): void
     {
         $this->composer = $composer;
@@ -94,12 +92,6 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
      */
     public function postInstallOrUpdate(ScriptEvent $event): void
     {
-        if (!$this->isFirstInstall) {
-            return;
-        }
-
-        $this->isFirstInstall = false;
-        // $this->runAdditionalUpdateToApplyMergedConfiguration($event);
     }
 
     public function preAutoloadDump(ScriptEvent $event): void
@@ -144,27 +136,6 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         }
     }
 
-    /**
-     * @throws Exception
-     */
-    private function runAdditionalUpdateToApplyMergedConfiguration(ScriptEvent $event): void
-    {
-        $this->io->info('<comment>Running additional update to apply merged configuration</comment>');
-
-        $config = $this->composer->getConfig();
-        $preferSource = $config->get('preferred-install') === 'source';
-        $preferDist = $config->get('preferred-install') === 'dist';
-
-        $installer = Installer::create($this->io, Factory::create($this->io));
-        $installer->setPreferSource($preferSource);
-        $installer->setPreferDist($preferDist);
-        $installer->setDevMode($event->isDevMode());
-        $installer->setDumpAutoloader();
-        $installer->setOptimizeAutoloader(false);
-        $installer->setUpdate(true);
-        $installer->run();
-    }
-
     private function recognizePluginInstallation(PackageEvent $event): void
     {
         $operation = $event->getOperation();
@@ -175,7 +146,6 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         $package = $operation->getPackage()->getName();
         if ($package === 'artemeon/composer-merge-plugin') {
             $this->io->info("$package installed");
-            $this->isFirstInstall = true;
         }
     }
 
