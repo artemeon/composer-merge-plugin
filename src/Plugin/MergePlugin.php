@@ -99,7 +99,7 @@ final class MergePlugin implements PluginInterface, EventSubscriberInterface
         }
 
         $this->isFirstInstall = false;
-        $this->runAdditionalUpdateToApplyMergedConfiguration($event);
+        // $this->runAdditionalUpdateToApplyMergedConfiguration($event);
     }
 
     public function preAutoloadDump(ScriptEvent $event): void
